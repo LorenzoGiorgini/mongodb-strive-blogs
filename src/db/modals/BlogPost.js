@@ -15,24 +15,32 @@ const BlogPostSchema = new mongoose.Schema({
         required: false
     },
     readTime: {
-        value: {
-            type: Number,
-            required: false
-        },
-        unit: {
-            type: String,
-            required: true,
-            default: 'minutes'
+        type: Object,
+        required: true,
+        nested: {
+            value: {
+                type: Number,
+                required: false
+            },
+            unit: {
+                type: String,
+                required: true,
+                default: 'minutes'
+            }
         }
     },
     author: {
-        name: {
-            type: String,
-            required: true
-        },
-        avatar: {
-            type: String,
-            required: true
+        type: Object,
+        required: true,
+        nested: {
+            name: {
+                type: String,
+                required: true
+            },
+            avatar: {
+                type: String,
+                required: true
+            }
         }
     },
     content: {
