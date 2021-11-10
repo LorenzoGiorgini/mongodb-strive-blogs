@@ -60,13 +60,15 @@ router.route("/:blogId")
 //Comments routes
 
 /*
+GET /blogPosts/:id/comments => returns all the comments for the specified blog post
 GET /blogPosts/:id/comments/:commentId=> returns a single comment for the specified blog post
 POST /blogPosts/:id => adds a new comment for the specified blog post
 PUT /blogPosts/:id/comment/:commentId => edit the comment belonging to the specified blog post
-DELETE /blogPosts/:id/comment/:commentId=> delete the comment belonging to the specified blog post */
+DELETE /blogPosts/:id/comment/:commentId=> delete the comment belonging to the specified blog post 
+*/
 
 
-/* GET /blogPosts/:id/comments => returns all the comments for the specified blog post */
+
 
 router.route("/:blogPostId/comments")
                 .get(async (req, res) => {
@@ -90,41 +92,91 @@ router.route("/:blogPostId/comments")
                 })
                 .post(async (req, res) => {
                     try {
-                        const newBlogPost = new BlogPost(req.body)
+                        const getBlogPost = await BlogPost.findById(req.params.blogPostId)
 
-                        await newBlogPost.save()
+                        if(getBlogPost) {
 
-                        res.status(201).send({success: true, createdPost: newBlogPost._id})
+                            const comment = {...req.body, postedAt: new Date()}
 
+                            getBlogPost.comments.push(comment)
+
+                            await getBlogPost.save()
+
+                            res.status(201).send({success: true, data: getBlogPost.comments})
+                        } else {
+                            res.status(404).send({success: false, message: "Blog Post not found"})
+                        }
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
                     }
                 })
 
 
-router.route("/:blogPostId/commentId")
+router.route("/:blogPostId/comments/:commentId")
                 .get(async (req, res) => {
                     try {
-                        const getBlogPostById = await BlogPost.findById(req.params.blogId)
-                        res.status(200).send({success: true, data: getBlogPostById})
+                        const getBlogPostById = await BlogPost.findById(req.params.blogPostId)
+
+                        if(getBlogPostById) {
+
+                            const singleCommentById = getBlogPostById.comments.find(comment => comment._id.toString() === req.params.commentId)
+
+                            if(singleCommentById) {
+                                res.status(200).send({success: true, data: singleCommentById})
+                            } else {
+                                res.status(404).send({success: false, message: "Comment not found"})
+                            }
+                        } else {
+
+                            res.status(404).send({success: false, message: "Comment not found"})
+                        }
                     } catch (error) {
+
                         res.status(404).send({success: false, errorr: error.message})
+
                     }
                 })
                 .put(async (req, res) => {
                     try {
-                        const updateBlogPostById = await BlogPost.findByIdAndUpdate(req.params.blogId, req.body, {new: true})
-                        res.status(200).send({success: true, data: updateBlogPostById})
+                        let getBlogPostById = await BlogPost.findById(req.params.blogPostId)
+
+
+                        if(getBlogPostById) {
+                            let commentIndex = getBlogPostById.comments.findIndex(comment => comment._id.toString() === req.params.commentId)
+
+                            getBlogPostById.comments[commentIndex] = {...getBlogPostById.comments[commentIndex].toObject() , ...req.body, updatedAt: new Date()}
+
+
+                            await getBlogPostById.save()
+
+                            res.status(200).send({success: true, data: getBlogPostById.comments[commentIndex]})
+                        } else {    
+                            res.status(404).send({success: false, message: "Comment not found"})
+
+                        }
+
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
+
                     }
                 })
                 .delete(async (req, res) => {
                     try {
-                        const updateBlogPostById = await BlogPost.findByIdAndDelete(req.params.blogId)
-                        res.status(204).send({success: true, message: "Deleted Successfully"})
+                        const deleteComment = await BlogPost.findByIdAndUpdate(
+                            req.params.blogPostId,
+                            { $pull: { comments: { _id: req.params.commentId } } },
+                            { new: true } 
+                        )
+                        if (deleteComment) {
+                            res.status(204).send({success: true, message: "Comment deleted"})
+
+                        } else {
+                            res.status(404).send({success: false, message: "Comment Not Found"})
+
+                        }
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
+
                     }
                 })
 

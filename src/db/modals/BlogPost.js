@@ -50,7 +50,8 @@ const BlogPostSchema = new mongoose.Schema({
     comments: [{
         text: {type: String, required: true},
         image: {type: String, required: true},
-        postedAt: {type: Date, required: true}
+        postedAt: {type: Date, required: true},
+        updatedAt: {type: Date}
     }]
 }, {
     timestamp: true
