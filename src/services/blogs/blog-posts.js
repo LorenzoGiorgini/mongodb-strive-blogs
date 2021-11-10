@@ -1,5 +1,7 @@
 import express from "express"
 import BlogPost from "../../db/modals/BlogPost.js"
+import q2m from "query-to-mongo"
+
 const { Router } = express
 
 const router = Router()
@@ -9,10 +11,22 @@ const router = Router()
 router.route("/")
                 .get(async (req, res) => {
                     try {
-                        const getAllBlogPosts = await BlogPost.find()
-                        
-                        res.status(200).send({success: true, data: getAllBlogPosts})
+                        if(req.query) {
+                            const mongoQuery = q2m(req.query)
 
+                            const total = await BlogPost.countDocuments(mongoQuery.criteria)
+
+                            const blogPosts = await BlogPost.find(mongoQuery.criteria)
+                                .limit(mongoQuery.options.limit)
+                                .skip(mongoQuery.options.skip)
+    
+                            res.send({ links: mongoQuery.links("/blogPosts", total), pageTotal: Math.ceil(total / mongoQuery.options.limit), total, blogPosts })
+                        } else {
+                            const getAllBlogPosts = await BlogPost.find()
+                        
+                            res.status(200).send({success: true, data: getAllBlogPosts})
+
+                        }
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
                     }
