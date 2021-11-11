@@ -82,7 +82,9 @@ router
 
 router.route("/:blogId/likes").post(async (req, res) => {
   try {
-    const getBlogPost = await BlogPost.findById(req.params.blogId);
+    let getBlogPost = await BlogPost.findById(req.params.blogId);
+
+    
 
     if (getBlogPost) {
       const alreadyLiked = await BlogPost.findOne({
@@ -90,21 +92,34 @@ router.route("/:blogId/likes").post(async (req, res) => {
         likes: new mongoose.Types.ObjectId(req.body.userId),
       });
 
+      
+
       if (!alreadyLiked) {
-        await BlogPost.findByIdAndUpdate(req.params.blogId, {
-          $push: { likes: req.body.userId },
-        });
+        await BlogPost.findByIdAndUpdate(
+          req.params.blogId,
+          {
+            $push: { likes: req.body.userId },
+          },
+          { new: true }
+        );
       } else {
-        await BlogPost.findByIdAndUpdate(req.params.blogId, {
-          $pull: { likes: req.body.userId },
-        });
+        await BlogPost.findByIdAndUpdate(
+          req.params.blogId,
+          {
+            $pull: { likes: req.body.userId },
+          },
+          { new: true }
+        );
       }
     } else {
       res
         .status(404)
         .send({ success: false, message: "That blog post doesn't exist" });
     }
-    res.status(200).send({ success: true, data: getBlogPost });
+
+    getBlogPost = await BlogPost.findById(req.params.blogId);
+
+    res.status(203).send({ success: true, data: getBlogPost });
   } catch (error) {
     res.status(404).send({ success: false, errorr: error.message });
   }
