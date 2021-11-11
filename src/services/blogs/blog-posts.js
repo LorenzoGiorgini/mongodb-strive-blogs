@@ -82,9 +82,7 @@ router
 
 router.route("/:blogId/likes").post(async (req, res) => {
   try {
-    let getBlogPost = await BlogPost.findById(req.params.blogId);
-
-    
+    const getBlogPost = await BlogPost.findById(req.params.blogId);
 
     if (getBlogPost) {
       const alreadyLiked = await BlogPost.findOne({
