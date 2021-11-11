@@ -36,6 +36,9 @@ const BlogPostSchema = new Schema({
         required: true
     },
     user: {type: Schema.Types.ObjectId, ref: 'User'},
+    likes: [{
+        type: Schema.Types.ObjectId, ref: 'User'
+    }],
     comments: [{
         text: {type: String, required: true},
         image: {type: String, required: true},

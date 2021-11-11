@@ -19,10 +19,10 @@ router.route("/")
                         const blogPosts = await BlogPost.find(mongoQuery.criteria)
                             .limit(mongoQuery.options.limit)
                             .skip(mongoQuery.options.skip)
-                            .populate({path: "user" , select: "name surname"})
+                            .populate({path: "user likes" , select: "name surname"})
 
                         res.send({ links: mongoQuery.links("/blogPosts", total), pageTotal: Math.ceil(total / mongoQuery.options.limit), total, blogPosts })
-
+                        
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
                     }
@@ -78,6 +78,52 @@ router.route("/:blogId")
 
                     }
                 })
+
+//Likes Route
+
+router.route("/:blogId/likes")
+                            .post(async (req, res) => {
+
+                                try {
+
+                                    const getBlogPost = await BlogPost.findById(req.params.blogId)
+
+                                    if(getBlogPost) {
+
+                                        const alreadyLiked = getBlogPost.likes.indexOf(like => like._id.toString() === req.body.userId.toString())
+
+                                        if(alreadyLiked) {
+
+                                            getBlogPost.likes.splice(alreadyLiked, 1)
+
+                                            await getBlogPost.save()
+                                            
+                                            res.status(200).send({success: true, data: getBlogPost})
+
+                                        } else {
+
+                                            getBlogPost.likes.push(req.body.userId.toString())
+
+                                            await getBlogPost.save()
+    
+                                            res.status(200).send({success: true, data: getBlogPost})
+
+                                        }
+                                    } else {
+                                        res.status(404).send({success: false, message: "That blog post doesn't exist"})
+
+                                    }
+                                } catch (error) {
+                                    res.status(404).send({success: false, errorr: error.message})
+
+                                }
+                            })
+
+
+
+
+
+
 
 //Comments routes
 
