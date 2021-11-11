@@ -1,5 +1,5 @@
 import express from "express"
-import BlogPost from "../../db/modals/BlogPost.js"
+import BlogPost from "../../db/modals/blogPostsModal/BlogPost.js"
 import q2m from "query-to-mongo"
 
 const { Router } = express
@@ -10,28 +10,25 @@ const router = Router()
 //Blog Posts routes
 router.route("/")
                 .get(async (req, res) => {
+
                     try {
-                        if(req.query) {
-                            const mongoQuery = q2m(req.query)
+                        const mongoQuery = q2m(req.query)
 
-                            const total = await BlogPost.countDocuments(mongoQuery.criteria)
+                        const total = await BlogPost.countDocuments(mongoQuery.criteria)
 
-                            const blogPosts = await BlogPost.find(mongoQuery.criteria)
-                                .limit(mongoQuery.options.limit)
-                                .skip(mongoQuery.options.skip)
-    
-                            res.send({ links: mongoQuery.links("/blogPosts", total), pageTotal: Math.ceil(total / mongoQuery.options.limit), total, blogPosts })
-                        } else {
-                            const getAllBlogPosts = await BlogPost.find()
-                        
-                            res.status(200).send({success: true, data: getAllBlogPosts})
+                        const blogPosts = await BlogPost.find(mongoQuery.criteria)
+                            .limit(mongoQuery.options.limit)
+                            .skip(mongoQuery.options.skip)
+                            .populate({path: "user" , select: "name surname"})
 
-                        }
+                        res.send({ links: mongoQuery.links("/blogPosts", total), pageTotal: Math.ceil(total / mongoQuery.options.limit), total, blogPosts })
+
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
                     }
                 })
                 .post(async (req, res) => {
+
                     try {
                         const newBlogPost = new BlogPost(req.body)
 
@@ -47,27 +44,38 @@ router.route("/")
 
 router.route("/:blogId")
                 .get(async (req, res) => {
+
                     try {
                         const getBlogPostById = await BlogPost.findById(req.params.blogId)
+
                         res.status(200).send({success: true, data: getBlogPostById})
+
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
+                        
                     }
                 })
                 .put(async (req, res) => {
+
                     try {
                         const updateBlogPostById = await BlogPost.findByIdAndUpdate(req.params.blogId, req.body, {new: true})
+
                         res.status(200).send({success: true, data: updateBlogPostById})
+
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
+
                     }
                 })
                 .delete(async (req, res) => {
                     try {
                         const updateBlogPostById = await BlogPost.findByIdAndDelete(req.params.blogId)
+
                         res.status(204).send({success: true, message: "Deleted Successfully"})
+
                     } catch (error) {
                         res.status(404).send({success: false, errorr: error.message})
+
                     }
                 })
 

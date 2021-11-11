@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 
+const { Schema } = mongoose;
 
-const BlogPostSchema = new mongoose.Schema({
+
+const BlogPostSchema = new Schema({
     category: {
         type: String,
         required: true
@@ -29,24 +31,11 @@ const BlogPostSchema = new mongoose.Schema({
             }
         }
     },
-    author: {
-        type: Object,
-        required: true,
-        nested: {
-            name: {
-                type: String,
-                required: true
-            },
-            avatar: {
-                type: String,
-                required: true
-            }
-        }
-    },
     content: {
         type: String,
         required: true
     },
+    user: {type: Schema.Types.ObjectId, ref: 'User'},
     comments: [{
         text: {type: String, required: true},
         image: {type: String, required: true},
