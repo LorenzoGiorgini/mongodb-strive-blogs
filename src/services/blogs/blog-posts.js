@@ -91,7 +91,6 @@ router.route("/:blogId/likes").post(async (req, res) => {
       });
 
       
-
       if (!alreadyLiked) {
         await BlogPost.findByIdAndUpdate(
           req.params.blogId,
@@ -114,8 +113,6 @@ router.route("/:blogId/likes").post(async (req, res) => {
         .status(404)
         .send({ success: false, message: "That blog post doesn't exist" });
     }
-
-    getBlogPost = await BlogPost.findById(req.params.blogId);
 
     res.status(203).send({ success: true, data: getBlogPost });
   } catch (error) {
