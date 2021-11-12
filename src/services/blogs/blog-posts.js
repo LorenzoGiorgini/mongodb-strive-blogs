@@ -82,7 +82,7 @@ router
 
 router.route("/:blogId/likes").post(async (req, res) => {
   try {
-    const getBlogPost = await BlogPost.findById(req.params.blogId);
+    let getBlogPost = await BlogPost.findById(req.params.blogId);
 
     if (getBlogPost) {
       const alreadyLiked = await BlogPost.findOne({
@@ -113,6 +113,8 @@ router.route("/:blogId/likes").post(async (req, res) => {
         .status(404)
         .send({ success: false, message: "That blog post doesn't exist" });
     }
+
+    getBlogPost = await BlogPost.findById(req.params.blogId);
 
     res.status(203).send({ success: true, data: getBlogPost });
   } catch (error) {
