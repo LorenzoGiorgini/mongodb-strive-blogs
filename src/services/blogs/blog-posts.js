@@ -4,12 +4,14 @@ import q2m from "query-to-mongo";
 import mongoose from "mongoose";
 const { Router } = express;
 
+import { authMiddleware } from "../../auth/user.js";
+
 const router = Router();
 
 //Blog Posts routes
 router
   .route("/")
-  .get(async (req, res) => {
+  .get(authMiddleware, async (req, res) => {
     try {
       const mongoQuery = q2m(req.query);
 
@@ -18,7 +20,7 @@ router
       const blogPosts = await BlogPost.find(mongoQuery.criteria)
         .limit(mongoQuery.options.limit)
         .skip(mongoQuery.options.skip)
-        .populate({ path: "user likes", select: "name surname" });
+        .populate({ path: "user likes" });
 
       res.send({
         links: mongoQuery.links("/blogPosts", total),
@@ -30,13 +32,17 @@ router
       res.status(404).send({ success: false, errorr: error.message });
     }
   })
-  .post(async (req, res) => {
+  .post(authMiddleware, async (req, res) => {
     try {
-      const newBlogPost = new BlogPost(req.body);
+      if (req.user._id.toString() === req.body.user) {
+        const newBlogPost = new BlogPost(req.body);
 
-      await newBlogPost.save();
+        await newBlogPost.save();
 
-      res.status(201).send({ success: true, createdPost: newBlogPost._id });
+        res.status(201).send({ success: true, createdPost: newBlogPost._id });
+      } else {
+        res.status(401).send({ success: false, error: "Unauthorized" });
+      }
     } catch (error) {
       res.status(404).send({ success: false, errorr: error.message });
     }
@@ -44,7 +50,7 @@ router
 
 router
   .route("/:blogId")
-  .get(async (req, res) => {
+  .get(authMiddleware, async (req, res) => {
     try {
       const getBlogPostById = await BlogPost.findById(req.params.blogId);
 
@@ -53,30 +59,51 @@ router
       res.status(404).send({ success: false, errorr: error.message });
     }
   })
-  .put(async (req, res) => {
+  .put(authMiddleware, async (req, res) => {
     try {
-      const updateBlogPostById = await BlogPost.findByIdAndUpdate(
-        req.params.blogId,
-        req.body,
-        { new: true }
-      );
+      if (req.user._id.toString() === req.body.user) {
+        const updateBlogPostById = await BlogPost.findByIdAndUpdate(
+          req.params.blogId,
+          req.body,
+          { new: true }
+        );
 
-      res.status(200).send({ success: true, data: updateBlogPostById });
+        res.status(200).send({ success: true, data: updateBlogPostById });
+      } else {
+        res.status(401).send({ success: false, error: "Unauthorized" });
+      }
     } catch (error) {
       res.status(404).send({ success: false, errorr: error.message });
     }
   })
-  .delete(async (req, res) => {
+  .delete(authMiddleware, async (req, res) => {
     try {
       const updateBlogPostById = await BlogPost.findByIdAndDelete(
         req.params.blogId
       );
 
-      res.status(204).send({ success: true, message: "Deleted Successfully" });
+      if (updateBlogPostById.user.toString() === req.user._id.toString()) {
+        res
+          .status(204)
+          .send({ success: true, message: "Deleted Successfully" });
+      }
     } catch (error) {
       res.status(404).send({ success: false, errorr: error.message });
     }
   });
+
+router.route("/me/articles").get(authMiddleware, async (req, res) => {
+  try {
+    const myArticles = await BlogPost.find({ user: req.user._id.toString() });
+    if (myArticles.length > 0) {
+      res.status(200).send({ success: true, data: myArticles });
+    } else {
+      res.status(404).send({ success: true, message: "No articles yet" });
+    }
+  } catch (error) {
+    res.status(404).send({ success: false, errorr: error.message });
+  }
+});
 
 //Likes Route
 

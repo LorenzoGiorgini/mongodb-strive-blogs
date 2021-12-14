@@ -7,7 +7,7 @@ export const authMiddleware = async (req, res, next) => {
   } else {
     const base64Credentials = req.headers.authorization.split(" ")[1];
 
-    const buffer = new Buffer(base64Credentials, "base64");
+    const buffer = Buffer.from(base64Credentials, "base64");
 
     const decodedCredentials = buffer.toString();
     
@@ -20,7 +20,7 @@ export const authMiddleware = async (req, res, next) => {
 
       next();
     } else {
-      res.status(401).send({ status: "401", message: "Credentials are wrong" });
+      res.status(401).send({ sucess: false, message: "Credentials are wrong" });
 
     }
   }

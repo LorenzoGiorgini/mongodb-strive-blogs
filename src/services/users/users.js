@@ -41,59 +41,31 @@ router
   });
 
 router
-  .route("/:userId")
-  .get(async (req, res) => {
+  .route("/me")
+  .get(authMiddleware, async (req, res) => {
     try {
-      const userById = await UsersModel.findById(req.params.userId);
-
-      if (userById) {
-        res.status(200).send({ success: true, data: userById });
-      } else {
-        res
-          .status(404)
-          .send({ success: false, message: "User with that id Not Found" });
-      }
+      res.status(200).send({ success: true, data: req.user });
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
     }
   })
-  .put(async (req, res) => {
+  .put(authMiddleware, async (req, res) => {
     try {
-      const modifyedUser = await UsersModel.findByIdAndUpdate(
-        req.params.userId,
-        req.body,
-        { new: true }
-      );
-
-      if (modifyedUser) {
-        res.status(203).send({ success: true, data: modifyedUser });
-      } else {
-        res
-          .status(404)
-          .send({ success: false, message: "User with that id Not Found" });
-      }
+      
+      
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
     }
   })
-  .delete(async (req, res) => {
+  .delete(authMiddleware, async (req, res) => {
     try {
-      const userByIdDelete = await UsersModel.findByIdAndDelete(
-        req.params.userId
-      );
-
-      if (userByIdDelete) {
-        res
-          .status(204)
-          .send({ success: true, deleted: "User has been deleted" });
-      } else {
-        res
-          .status(404)
-          .send({ success: false, message: "User with that id Not Found" });
-      }
+      await req.user.deleteOne()
+      res.status(204).send({ success: true, message: "User Deleted" });
     } catch (error) {
       res.status(404).send({ success: false, error: error.message });
     }
   });
+
+
 
 export default router;
