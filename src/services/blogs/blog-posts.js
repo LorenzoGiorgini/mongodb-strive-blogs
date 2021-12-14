@@ -90,7 +90,6 @@ router.route("/:blogId/likes").post(async (req, res) => {
         likes: new mongoose.Types.ObjectId(req.body.userId),
       });
 
-      
       if (!alreadyLiked) {
         await BlogPost.findByIdAndUpdate(
           req.params.blogId,
